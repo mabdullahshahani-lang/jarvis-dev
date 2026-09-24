@@ -1,0 +1,8 @@
+# Sensitive/personal files - never commit these
+credentials.json
+token.json
+whatsapp_session/
+jarvis_whatsapp_profile/
+__pycache__/
+*.pyc
+devlog.json
