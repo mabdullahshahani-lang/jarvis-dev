@@ -78,8 +78,48 @@
   #status-panel {
     bottom: 40px; left: 50%; transform: translateX(-50%);
     width: 620px; text-align: center;
+    /* cap height so short responses never crowd the reactor */
+    max-height: 80px;
+    overflow: hidden;
   }
   #status-text { font-size: 15px; letter-spacing: 1px; }
+
+  /* ===== LONG RESPONSE PANEL ===== */
+  /*
+   * Shown only when JARVIS delivers a dev-assistant response longer than ~120
+   * chars. Sits in the horizontal center of the screen, vertically between the
+   * top panels and the bottom panels, and is deliberately sized to avoid the
+   * reactor rings (outer ring radius = 150px → 300px diameter + 420px wrap =
+   * reactor occupies roughly center ±210px). The response panel starts below
+   * the top panels (top: 160px) and ends above the bottom panels
+   * (bottom: 120px), leaving a 60px gutter on every side.
+   * z-index 5 puts it above the reactor (z-index 0, default) but below the
+   * scanline overlay (z-index 10).
+   */
+  #response-panel {
+    display: none;                       /* hidden until setLongResponse() */
+    position: absolute;
+    top: 160px; bottom: 120px;
+    left: 50%; transform: translateX(-50%);
+    width: 560px;
+    z-index: 5;
+    overflow-y: auto;
+    text-align: left;
+    /* dim the reactor behind this panel */
+    background: rgba(0, 0, 0, 0.82);
+  }
+  #response-panel.visible { display: block; }
+  #response-text {
+    font-size: 13px;
+    line-height: 1.7;
+    letter-spacing: 0.3px;
+    white-space: pre-wrap;     /* preserves newlines from the AI response */
+    word-break: break-word;
+  }
+  /* subtle scrollbar styling to keep the sci-fi look */
+  #response-panel::-webkit-scrollbar { width: 4px; }
+  #response-panel::-webkit-scrollbar-track { background: transparent; }
+  #response-panel::-webkit-scrollbar-thumb { background: var(--c); border-radius: 2px; opacity: 0.5; }
 
   /* ===== PROJECT PANEL (top right) ===== */
   #project-panel { top: 40px; right: 40px; width: 280px; }
@@ -103,12 +143,16 @@
     position: absolute; top: 50%; left: 50%;
     transform: translate(-50%, -50%);
     width: 420px; height: 420px;
+    z-index: 1;          /* sits above default (0) but below response panel (5) */
+    transition: opacity 0.4s ease;
   }
+  /* dim reactor when long response is shown — keeps it visible but not distracting */
+  #app.response-active #reactor-wrap { opacity: 0.25; }
   svg { overflow: visible; }
 
-  .ring-outer { animation: spin 12s linear infinite; transform-origin: center; }
-  .ring-mid   { animation: spin-rev 8s linear infinite; transform-origin: center; }
-  .ring-inner { animation: spin 5s linear infinite; transform-origin: center; }
+  .ring-outer { animation: spin 12s linear infinite; transform-origin: center; transform-box: fill-box; }
+  .ring-mid   { animation: spin-rev 8s linear infinite; transform-origin: center; transform-box: fill-box; }
+  .ring-inner { animation: spin 5s linear infinite; transform-origin: center; transform-box: fill-box; }
 
   @keyframes spin { from { transform: rotate(0deg);} to { transform: rotate(360deg);} }
   @keyframes spin-rev { from { transform: rotate(0deg);} to { transform: rotate(-360deg);} }
@@ -181,6 +225,12 @@
     <div id="status-text">Awaiting command...</div>
   </div>
 
+  <!-- Long dev-assistant response panel — hidden by default, shown by setLongResponse() -->
+  <div class="panel" id="response-panel">
+    <div class="panel-label">JARVIS DEV — RESPONSE</div>
+    <div id="response-text"></div>
+  </div>
+
   <div id="reactor-wrap">
     <svg viewBox="-210 -210 420 420" width="420" height="420">
       <g class="ring-outer">
@@ -222,6 +272,36 @@
 
   function setStatusText(text) {
     document.getElementById('status-text').textContent = text;
+    // whenever a short status arrives, clear any previous long response
+    clearLongResponse();
+  }
+
+  // LONG_THRESHOLD: responses longer than this character count use the full panel
+  const LONG_THRESHOLD = 120;
+
+  function setLongResponse(text) {
+    if (!text || text.length <= LONG_THRESHOLD) {
+      // short enough — use the normal status bar, no panel needed
+      document.getElementById('status-text').textContent = text;
+      clearLongResponse();
+      return;
+    }
+    // show the dedicated response panel
+    const panel = document.getElementById('response-panel');
+    document.getElementById('response-text').textContent = text;
+    panel.classList.add('visible');
+    panel.scrollTop = 0;           // always start at the top
+    app.classList.add('response-active');   // dims reactor
+    // also put a short excerpt in the status bar so the bottom isn't blank
+    const excerpt = text.slice(0, 80).replace(/\n/g, ' ') + (text.length > 80 ? '…' : '');
+    document.getElementById('status-text').textContent = excerpt;
+  }
+
+  function clearLongResponse() {
+    const panel = document.getElementById('response-panel');
+    panel.classList.remove('visible');
+    app.classList.remove('response-active');
+    document.getElementById('response-text').textContent = '';
   }
 
   function setSchedule(lines) {

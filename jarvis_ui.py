@@ -78,3 +78,20 @@ def ui_add_log(text):
             window.evaluate_js(f"addLogEntry('{safe_text}')")
         except Exception:
             pass
+
+def ui_set_long_response(text):
+    """Push a long dev-assistant response to the dedicated response panel.
+    Short text falls back to the normal status bar automatically (handled in JS)."""
+    if window:
+        try:
+            window.evaluate_js(f"setLongResponse({json.dumps(text)})")
+        except Exception:
+            pass
+
+def ui_clear_response():
+    """Hide the long-response panel and restore normal status bar layout."""
+    if window:
+        try:
+            window.evaluate_js("clearLongResponse()")
+        except Exception:
+            pass

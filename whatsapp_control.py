@@ -36,10 +36,11 @@ def open_whatsapp():
     return driver
 
 
-def find_and_open_contact(contact_name, timeout=25):
+def find_and_open_contact(contact_name, timeout=30):
     """Searches for a contact by name and opens their chat. Returns True if found."""
     driver = get_driver()
     try:
+        print(f"[WhatsApp] Waiting for search box to appear (up to {timeout}s)...")
         search_box = None
         end_time = time.time() + timeout
         while time.time() < end_time:
@@ -47,21 +48,58 @@ def find_and_open_contact(contact_name, timeout=25):
                 search_box = driver.find_element(By.XPATH, '//div[@contenteditable="true"][@data-tab="3"]')
                 break
             except Exception:
-                time.sleep(0.5)
+                pass
+            try:
+                # fallback: newer WhatsApp Web layouts sometimes use a different data-tab or aria-label
+                search_box = driver.find_element(By.XPATH, '//div[@aria-label="Search input textbox"]')
+                break
+            except Exception:
+                pass
+            time.sleep(0.5)
 
         if search_box is None:
-            return False  # QR not scanned in time / page not loaded
+            print("[WhatsApp] Search box never appeared - page may not have loaded, or QR not scanned yet.")
+            return False
 
+        print("[WhatsApp] Search box found, typing contact name...")
         search_box.click()
         search_box.send_keys(contact_name)
         time.sleep(2)
 
-        result = driver.find_element(By.XPATH, f'//span[@title="{contact_name}"]')
-        result.click()
+        print("[WhatsApp] Looking for first search result...")
+        first_result = None
+        try:
+            first_result = driver.find_element(
+                By.XPATH, '//div[@aria-label="Search results."]//div[@role="listitem"][1]'
+            )
+        except Exception:
+            pass
+        if first_result is None:
+            try:
+                first_result = driver.find_element(
+                    By.XPATH, '(//div[@data-testid="cell-frame-container"])[1]'
+                )
+            except Exception:
+                pass
+        if first_result is None:
+            try:
+                # broad fallback: any span containing the searched name, case-insensitive
+                first_result = driver.find_element(
+                    By.XPATH, f'//span[contains(translate(@title, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"), "{contact_name.lower()}")]'
+                )
+            except Exception:
+                pass
+
+        if first_result is None:
+            print("[WhatsApp] No search result found for:", contact_name)
+            return False
+
+        first_result.click()
         time.sleep(1)
+        print("[WhatsApp] Contact opened successfully.")
         return True
     except Exception as e:
-        print("Error finding contact:", e)
+        print("[WhatsApp] Error finding contact:", e)
         return False
 
 

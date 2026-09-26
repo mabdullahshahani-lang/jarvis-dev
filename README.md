@@ -1,43 +1,184 @@
-# J.A.R.V.I.S — Personal Voice-Controlled AI Assistant
+# JARVIS Dev
 
-A locally-run, voice-activated AI assistant for Windows, built from scratch — inspired by Iron Man's JARVIS.
+### Local AI Developer Assistant for Understanding Existing Codebases
 
-## What it does
+JARVIS Dev is a locally running AI developer assistant designed to help developers understand and maintain existing software projects.
 
-- **Wake word activation** — always listening for "Hey Jarvis" (via openWakeWord), zero cloud dependency for wake detection
-- **Natural conversation** — understands casual, messy speech (not just fixed commands) via a locally-run LLM (Llama 3.1 8B through Ollama)
-- **Follow-up conversations** — no need to repeat the wake word for follow-up questions within a session
-- **Real calendar access** — reads your actual Google Calendar via OAuth, tells you your schedule by voice
-- **WhatsApp messaging** — finds a contact, drafts a message, confirms with you, and sends it (via Selenium browser automation)
-- **Screen vision** — takes a screenshot and describes/analyzes what's on your screen using a local vision model (Llava)
-- **System control** — adjusts volume and brightness by voice
-- **Dev progress log** — a simple voice-powered journal for tracking project progress over time
-- **Custom HUD** — a fullscreen animated overlay (HTML/CSS/JS via pywebview) with a live clock, weather, CPU/RAM stats, calendar preview, and an activity log — pops up on wake word, hides when idle
-- **Runs fully locally** — no per-message API costs, no cloud dependency for the core assistant loop (calendar/WhatsApp are the only pieces that talk to external services, and only when asked)
+Instead of manually searching through files and trying to understand an unfamiliar codebase, developers can interact with their project conversationally through JARVIS.
 
-## Tech stack
+## The Problem
 
-- **Python** — core orchestration
-- **openWakeWord** — offline wake-word detection
-- **SpeechRecognition + PyAudio** — voice input
-- **pyttsx3** — text-to-speech output
-- **Ollama (Llama 3.1 8B / Llava)** — local LLM for conversation + vision
-- **pywebview** — renders the custom HTML/CSS/JS HUD as a native overlay window
-- **Selenium** — WhatsApp Web automation
-- **Google Calendar API (OAuth)** — real calendar access
-- **pycaw / screen-brightness-control** — system-level volume & brightness control
+Understanding an existing codebase can take significant time, especially when:
 
-## Setup
+* Joining an unfamiliar project
+* Maintaining an older application
+* Trying to understand how different files work together
+* Looking for specific functionality inside a large project
 
-1. Install Python 3.13+ and the dependencies (see `requirements.txt`)
-2. Install [Ollama](https://ollama.com) and pull `llama3.1:8b` and `llava`
-3. Set up your own Google Cloud project + OAuth credentials for Calendar API access, save as `credentials.json` in the project folder (never commit this file)
-4. Run `Jarvis.py`
+JARVIS Dev addresses this by loading project context and allowing developers to ask questions about the project and its code.
 
-## Project status
+## Core Workflow
 
-Actively in development. Built as a learning project to explore voice interfaces, local AI, browser automation, and building a genuinely useful personal assistant end-to-end — from ears, to brain, to hands, to a face.
+```text
+Existing Project
+       ↓
+Project Context Loader
+       ↓
+JARVIS Dev
+       ↓
+Project Analysis
+       ↓
+Code Q&A
+       ↓
+Faster Codebase Understanding
+```
+
+## Key Features
+
+### Project Analysis
+
+JARVIS can analyze the loaded project and provide a structured overview of its codebase, including its main components and organization.
+
+This is particularly useful when onboarding onto an unfamiliar project.
+
+### Code Q&A
+
+Developers can ask questions about specific code within the loaded project.
+
+JARVIS uses the indexed project context to answer questions about files, functions, and implementation details.
+
+### Project Context
+
+JARVIS can load a project recursively and build a usable context from its source files while avoiding sensitive files and unnecessary data.
+
+### Voice Interaction
+
+JARVIS supports voice-based interaction, allowing developers to communicate with the assistant without relying entirely on a traditional text interface.
+
+### Custom HUD
+
+JARVIS includes a custom HTML/CSS/JavaScript HUD rendered through pywebview.
+
+The interface provides visual feedback while JARVIS is listening, processing, and responding.
+
+### Local AI
+
+The core AI functionality runs locally through Ollama using Llama 3.1 8B.
+
+This allows the developer-assistant workflow to operate without requiring a paid per-request cloud AI API.
+
+## Technology Stack
+
+* **Python** — core application and orchestration
+* **Ollama** — local AI inference
+* **Llama 3.1 8B** — local language model
+* **openWakeWord** — wake-word detection
+* **SpeechRecognition / PyAudio** — voice input
+* **pyttsx3** — text-to-speech
+* **pywebview** — native HUD interface
+* **HTML / CSS / JavaScript** — HUD frontend
+* **Selenium** — browser automation for existing assistant functionality
+* **Google Calendar API** — calendar integration for existing assistant functionality
+
+## How It Works
+
+1. JARVIS starts and initializes the voice interface.
+2. A project can be loaded into the developer context system.
+3. Relevant project files are indexed and prepared as context.
+4. The developer can request a project analysis.
+5. The developer can ask questions about specific code.
+6. JARVIS sends the relevant context to the locally running LLM.
+7. The response is presented through the voice interface and HUD.
+
+## Project Structure
+
+```text
+JARVIS/
+│
+├── Jarvis.py
+├── jarvis_ui.py
+├── dev_control.py
+├── vision_control.py
+├── calendar_control.py
+├── whatsapp_control.py
+├── devlog_control.py
+├── system_control.py
+├── hud.html
+├── start_jarvis.bat
+├── requirements.txt
+└── README.md
+```
+
+## Running JARVIS Dev
+
+### Requirements
+
+* Windows
+* Python 3.13+
+* Ollama
+* Llama 3.1 8B
+* Required Python packages from `requirements.txt`
+
+### Setup
+
+1. Install the required Python dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+2. Install Ollama.
+
+3. Pull the local model:
+
+```bash
+ollama pull llama3.1:8b
+```
+
+4. Start JARVIS:
+
+```bash
+python Jarvis.py
+```
+
+The project may also be launched using the included:
+
+```text
+start_jarvis.bat
+```
+
+## Security
+
+Sensitive files are excluded from project context and version control.
+
+The project uses `.gitignore` and `.bobignore` to prevent files such as credentials, authentication tokens, WhatsApp sessions, and private development logs from being included.
+
+Never commit personal credentials or API tokens to the repository.
+
+## Demo
+
+The demo demonstrates the core developer workflow:
+
+**Project Analysis → Code Understanding → Code Q&A**
+
+The demonstration focuses on how JARVIS can help a developer understand an existing project without manually inspecting every file.
+
+## Challenge Connection
+
+JARVIS Dev was created for the developer-workflow challenge by focusing on:
+
+**Developer onboarding and application maintenance.**
+
+The workflow is designed to reduce the time developers spend understanding an unfamiliar codebase by providing project-level analysis and conversational access to its code.
+
+## Project Status
+
+JARVIS Dev is a working prototype developed during the hackathon.
+
+The project is actively evolving, with the current prototype focused on project context, project analysis, code Q&A, voice interaction, and the custom HUD.
 
 ## Author
 
-Built by Abdullah — first-time game developer (see also: [Aagnee Chronicles]) and hobbyist AI/systems builder.
+Built by Abdullah
+
+A developer exploring local AI, game development, voice interfaces, and software systems.
